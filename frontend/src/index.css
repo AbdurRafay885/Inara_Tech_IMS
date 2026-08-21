@@ -1,0 +1,276 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans tracking-wide min-h-screen selection:bg-cyan-500 selection:text-slate-950;
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+.text-slate-950 {
+  color: #030712 !important;
+}
+
+/* Custom glowing styling and layout overrides for light mode */
+.glass-panel {
+  @apply bg-white border border-slate-800/80 rounded-2xl shadow-xl shadow-slate-950/5;
+}
+
+.glass-input {
+  @apply w-full bg-white border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-200;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-slate-950 font-semibold px-6 py-3 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all duration-200 cursor-pointer;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-slate-950 border border-slate-800 text-slate-100 font-medium px-6 py-3 rounded-xl transition-all duration-200 cursor-pointer;
+}
+
+.glow-text-cyan {
+  text-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+}
+
+.glow-border-cyan {
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.05);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-950;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-800 rounded-full hover:bg-slate-700;
+}
+
+/* Custom Date Input styling */
+.glass-input-date-wrapper {
+  position: relative;
+}
+
+.glass-input-date-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 48px;
+  opacity: 0;
+  z-index: 10;
+}
+
+/* Ensure borders that use slate-900, slate-800, or slate-700 are distinct in light mode across all pages */
+[class*="border-slate-9"],
+[class*="divide-slate-9"] {
+  border-color: #cbd5e1 !important;
+}
+
+[class*="border-slate-8"],
+[class*="divide-slate-8"] {
+  border-color: #cbd5e1 !important;
+}
+
+[class*="border-slate-7"],
+[class*="divide-slate-7"] {
+  border-color: #94a3b8 !important;
+}
+
+.btn-icon {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: #dc2626 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Force all standard action buttons to render in solid red background with white text */
+button:not(.btn-icon):not([class*="hover:bg-red-50"]):not([class*="p-1"]):not([class*="p-1.5"]):not([class*="p-2"]):not([class*="p-0.5"]):not([class*="w-8"]):not([class*="h-8"]):not([class*="tab-btn"]),
+.btn-primary,
+.btn-secondary,
+input[type="submit"] {
+  background-color: #ef4444 !important;
+  /* Lighter red */
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1), 0 2px 4px -1px rgba(239, 68, 68, 0.06) !important;
+}
+
+button:not(.btn-icon):not([class*="hover:bg-red-50"]):not([class*="p-1"]):not([class*="p-1.5"]):not([class*="p-2"]):not([class*="p-0.5"]):not([class*="w-8"]):not([class*="h-8"]):not([class*="tab-btn"]):hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+input[type="submit"]:hover {
+  background-color: #dc2626 !important;
+  border-color: #b91c1c !important;
+}
+
+/* Force status badges to follow background rules with black text */
+span[class*="bg-emerald-950"],
+.badge-emerald {
+  background-color: #22c55e !important;
+  /* Positive: Green background */
+  color: #000000 !important;
+  /* Black text */
+  border-color: #16a34a !important;
+}
+
+span[class*="bg-red-950"],
+.badge-red {
+  background-color: #ef4444 !important;
+  /* Negative: Red background */
+  color: #000000 !important;
+  /* Black text */
+  border-color: #dc2626 !important;
+}
+
+span[class*="bg-slate-900"][class*="text-slate-400"],
+span[class*="bg-amber-950"],
+span[class*="bg-blue-950"],
+.badge-yellow {
+  background-color: #fef08a !important;
+  /* Pending: Light yellow background */
+  color: #000000 !important;
+  /* Black text */
+  border-color: #eab308 !important;
+}
+
+/* Roadmap tab buttons override for supervisor panel */
+button.roadmap-tab-btn {
+  background-color: #fef2f2 !important;
+  /* very light red (red-50) */
+  color: #000000 !important;
+  /* black text */
+  border: 1px solid #fee2e2 !important;
+  /* light red border */
+}
+
+button.roadmap-tab-btn:hover {
+  background-color: #fee2e2 !important;
+  /* slightly darker light red (red-100) */
+  color: #000000 !important;
+  border-color: #fca5a5 !important;
+}
+
+button.roadmap-tab-btn.active {
+  background-color: #fee2e2 !important;
+  /* active light red (red-100) */
+  color: #000000 !important;
+  /* black text */
+  border-color: #f87171 !important;
+  /* active border */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Quick Actions Dashboard Card buttons override */
+button.dashboard-card {
+  background-color: #d5b7b7 !important;
+  /* very light red (red-50) */
+  border: 1px solid #fca5a5 !important;
+  /* light red border */
+}
+
+button.dashboard-card:hover {
+  background-color: #fee2e2 !important;
+  /* slightly darker light red (red-100) */
+  border-color: #f87171 !important;
+}
+
+button.dashboard-card span {
+  color: #000000 !important;
+  /* Force all text inside to be black */
+}
+
+/* Modal close button override */
+button.modal-close-btn {
+  background-color: transparent !important;
+  color: #94a3b8 !important;
+  /* gray-400 */
+  border: none !important;
+  padding: 0 !important;
+  font-size: 2.5rem !important;
+  /* text-4xl equivalent */
+  line-height: 1 !important;
+  box-shadow: none !important;
+  transition: color 0.15s ease-in-out !important;
+}
+
+button.modal-close-btn:hover {
+  color: #dc2626 !important;
+  /* red-600 */
+  background-color: transparent !important;
+}
+
+/* Dashboard view cards hover/glowing up effects */
+.dashboard-view .glass-panel,
+.dashboard-view div.relative.bg-slate-900.border[class*="border-"],
+.dashboard-view button[class*="bg-slate-950/60"],
+.dashboard-view div.bg-slate-900.border-slate-800.p-6 {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.dashboard-view .glass-panel:hover,
+.dashboard-view div.relative.bg-slate-900.border[class*="border-"]:hover,
+.dashboard-view button[class*="bg-slate-950/60"]:hover,
+.dashboard-view div.bg-slate-900.border-slate-800.p-6:hover {
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.1), 0 8px 10px -6px rgba(220, 38, 38, 0.05) !important;
+}
+
+/* Hide horizontal overflow scrollbar on tab content panels */
+.flex-1.min-h-0.overflow-y-auto {
+  overflow-x: hidden !important;
+}
+
+/* Auth Card Border override */
+.auth-card {
+  border: 2px solid #d23131 !important;
+  /* border-2 border-red-700 (dark red) */
+}
+
+/* Journey Tabs Buttons overrides */
+button.journey-tab-btn {
+  padding: 0.75rem 1.25rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.75rem !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+button.journey-tab-btn.active {
+  background-color: #ef4444 !important; /* Tailwind red-500 */
+  color: #ffffff !important;
+  border: 1px solid #ef4444 !important;
+}
+
+button.journey-tab-btn.inactive {
+  background-color: #ffffff !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+}
+
+button.journey-tab-btn.inactive:hover {
+  background-color: #fef2f2 !important; /* Tailwind red-50 */
+}
+
+/* App Error Alert styling - White background, red border, dark red text */
+.app-error-alert {
+  background-color: #ffffff !important;
+  border: 1.5px solid #dc2626 !important;
+  color: #991b1b !important;
+}

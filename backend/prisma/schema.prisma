@@ -1,0 +1,318 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  INTERN
+  SUPERVISOR
+  APPLICANT
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  SELECTED
+  REJECTED
+}
+
+enum InternshipMode {
+  REMOTE
+  HYBRID
+  ON_SITE
+}
+
+enum Department {
+  DEVOPS
+  AI_ML
+  SECURITY
+  NETWORKING
+  DEVELOPMENT
+}
+
+enum DocumentType {
+  CV
+  ACADEMIC_TRANSCRIPT
+  EXPERIENCE_CERTIFICATE
+  CNIC_ID
+  PHOTO
+}
+
+enum DocumentStatus {
+  PENDING
+  UPLOADED
+  VERIFIED
+  REJECTED
+}
+
+enum ReportStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  CHANGES_REQUESTED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum NotificationType {
+  APPLICATION_STATUS_UPDATE
+  DEPARTMENT_ASSIGNMENT
+  WEEKLY_REPORT_FEEDBACK
+  PROJECT_ASSIGNMENT
+  DOCUMENT_VERIFICATION
+  REPORT_DEADLINE
+}
+
+// 1. User Model (Admins, Supervisors, and Selected Interns)
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  role         Role        @default(INTERN)
+  firstName    String
+  lastName     String
+  isActive     Boolean     @default(true) // For deactivating portal access on completion
+  department   String? // Nullable, only relevant for interns/supervisors
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Link to application if they were recruited through it
+  application   Application? @relation(fields: [applicationId], references: [id])
+  applicationId String?      @unique
+  endDate       DateTime?
+
+  // Relations for Interns
+  documents     OnboardingDocument[]
+  taskReports   TaskReport[]         @relation("InternReports")
+  assignedTasks ProjectTask[]        @relation("TaskAssignments")
+  projects      Project[]            @relation("ProjectMembers")
+
+  // Relations for Supervisors
+  supervisorId    String?
+  supervisor      User?          @relation("SupervisorToInterns", fields: [supervisorId], references: [id])
+  assignedInterns User[]         @relation("SupervisorToInterns")
+  createdProjects Project[]      @relation("SupervisorProjects")
+  reviewedReports TaskReport[]   @relation("SupervisorReports")
+
+  // Historical Records (If user gets deleted or archived)
+  historicalRecords HistoricalRecord[]
+
+  // Notifications
+  notifications Notification[]
+
+  // Training roadmap uploads
+  uploadedRoadmaps TrainingRoadmap[] @relation("RoadmapUploads")
+}
+
+// 2. Application Model (For candidates applying to the portal)
+model Application {
+  id                  String            @id @default(uuid())
+  email               String            @unique
+  cnic                String            @unique
+  currentEducation    String
+  instituteName       String
+  firstName           String
+  lastName            String
+  phone               String
+  preferredDepartment String? // Optional preferred department
+  internshipMode      String
+  resumeFile          String // Stores path/filename of the uploaded resume document
+  status              ApplicationStatus @default(SUBMITTED)
+  interviewDate       DateTime?
+  dob                 DateTime
+  address             String            @db.Text
+  gender              String
+  nationality         String
+  picture             String
+  emergencyContact    String
+  duration            Int
+  isDeleted           Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Link to user profile once selected
+  user User?
+}
+
+// 3. Onboarding Documents Model (For selected interns to upload PHOTO, CNIC_ID, CV, etc.)
+model OnboardingDocument {
+  id        String         @id @default(uuid())
+  type      DocumentType // CV, ACADEMIC_TRANSCRIPT, EXPERIENCE_CERTIFICATE, CNIC_ID, PHOTO
+  fileName  String // Stores the path/filename of the uploaded file
+  status    DocumentStatus @default(PENDING)
+  feedback  String? // Admin feedback (e.g., "blur picture, please reupload")
+  internId  String
+  intern    User           @relation(fields: [internId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// 4. Training Roadmap Model (Structured roadmap per department)
+model TrainingRoadmap {
+  id            String          @id @default(uuid())
+  title         String          @default("Training Roadmap")
+  department    String
+  uploadedById  String
+  uploadedBy    User            @relation("RoadmapUploads", fields: [uploadedById], references: [id])
+  modules       RoadmapModule[]
+  taskReports   TaskReport[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model RoadmapModule {
+  id          String            @id @default(uuid())
+  title       String
+  roadmapId   String
+  roadmap     TrainingRoadmap   @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  subModules  RoadmapSubModule[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model RoadmapSubModule {
+  id          String         @id @default(uuid())
+  title       String
+  description String?        @db.Text
+  moduleId    String
+  module      RoadmapModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  tasks       PracticalTask[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model PracticalTask {
+  id           String           @id @default(uuid())
+  title        String
+  description  String?          @db.Text
+  durationHours Int
+  subModuleId  String
+  subModule    RoadmapSubModule @relation(fields: [subModuleId], references: [id], onDelete: Cascade)
+  reports      TaskReport[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// 5. Practical Task Report Model
+model TaskReport {
+  id              String           @id @default(uuid())
+  workCompleted   String           @db.Text
+  challengesFaced String           @db.Text
+  attachment      String?          // Stores path/filename of the uploaded report document
+  status          ReportStatus     @default(SUBMITTED)
+  feedback        String?          @db.Text // Written feedback from supervisor
+  internId        String
+  intern          User             @relation("InternReports", fields: [internId], references: [id], onDelete: Cascade)
+  supervisorId    String?
+  supervisor      User?            @relation("SupervisorReports", fields: [supervisorId], references: [id])
+  roadmapId       String?
+  roadmap         TrainingRoadmap? @relation(fields: [roadmapId], references: [id], onDelete: SetNull)
+  taskId          String
+  task            PracticalTask    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  department      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([internId, taskId])
+}
+
+
+// 7. Project Model (For collaborative project work)
+model Project {
+  id            String        @id @default(uuid())
+  name          String
+  description   String?       @db.Text
+  referenceFile String? // Stores path/filename of uploaded project description/reference doc
+  supervisorId  String
+  supervisor    User          @relation("SupervisorProjects", fields: [supervisorId], references: [id])
+  members       User[]        @relation("ProjectMembers")
+  tasks         ProjectTask[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// 8. Project Task Model (Tasks assigned to interns within projects)
+model ProjectTask {
+  id              String     @id @default(uuid())
+  projectId       String
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?    @db.Text
+  dueDate         DateTime?
+  status          TaskStatus @default(PENDING)
+  assignedToId    String?
+  assignedTo      User?      @relation("TaskAssignments", fields: [assignedToId], references: [id])
+  deliverable     String? // Stores path/filename of the uploaded project deliverable
+  deliverableLink String? // Stores link of project work (e.g. GitHub link)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+// 9. Historical Record Model (For completed/archived internship summaries)
+model HistoricalRecord {
+  id               String     @id @default(uuid())
+  userId           String? // Nullable, if the user account is deleted/deactivated
+  user             User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  internName       String
+  internEmail      String
+  internshipYear   Int
+  department       String
+  supervisorName   String?
+  completionStatus String // e.g., "Completed", "Terminated"
+  cv               String? // Snapshot of CV filename/path
+  weeklyReports    Json // Snapshot of weekly reports and feedback
+  projects         Json // Snapshot of projects and tasks
+  createdAt        DateTime   @default(now())
+}
+
+// 10. Notification Model (For portal system alerts)
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String           @db.Text
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime           @default(now())
+}
+
+model ApplicationStatusLog {
+  id            String   @id @default(uuid())
+  applicationId String
+  oldStatus     String
+  newStatus     String
+  updatedById   String   // Admin who changed status
+  updatedByName String   // Admin name/email
+  createdAt     DateTime @default(now())
+}
+
+model OnboardingDocLog {
+  id        String   @id @default(uuid())
+  userId    String   // Intern ID
+  userEmail String   // Intern email
+  userName  String   // Intern full name
+  docType   String
+  fileName  String
+  createdAt DateTime @default(now())
+}
+
+model DropdownOption {
+  id        String   @id @default(uuid())
+  field     String   // "currentEducation", "preferredDepartment", "internshipMode", "duration"
+  value     String
+  label     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([field, value])
+}
